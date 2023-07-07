@@ -1,0 +1,66 @@
+import random
+import qrcode
+import openpyxl
+
+def rand_code_gen(x, leading_zeroes=True):
+    """Return an X digit number, leading_zeroes returns a string, otherwise int"""
+    if not leading_zeroes:
+        return str(random.randint(10**(x-1), 10**x-1))  
+    else:
+        return ''.join([str(random.randint(0, 9)) for i in range(x)])
+
+# Open the existing workbook and sheet
+workbook = openpyxl.load_workbook("codes.xlsx")
+sheet = workbook.active
+
+# Determine the next available row
+next_row = sheet.max_row + 1
+
+# Create a list to store the codes that have been generated
+codes = []
+
+# Iterate over the rows of the sheet and append the codes to the list
+for row in sheet.iter_rows(min_row=1, max_row=sheet.max_row, min_col=1, max_col=1):
+    codes.append(row[0].value)
+
+# Prompt the user for the number of codes to generate
+num_codes = int(input("Enter the number of codes to generate: "))
+
+for i in range(num_codes):
+    code = rand_code_gen(16)
+
+    # Check if the code is already in the list
+    while code in codes:
+        # Generate a new code if it is already in the list
+        code = rand_code_gen(16)
+
+    # Add the code to the list
+    codes.append(code)
+
+    # Add the code to the first column of the sheet
+    sheet.cell(row=next_row, column=1).value = code
+
+    # Leave the second column empty
+    sheet.cell(row=next_row, column=2).value = ""
+
+    # Generate a QR code for the code and save it to a file
+    qr = qrcode.QRCode(
+        version=1,
+        error_correction=qrcode.constants.ERROR_CORRECT_L,
+        box_size=10,
+        border=4,
+    )
+    qr.add_data(code)
+    qr.make(fit=True)
+    img = qr.make_image()
+    img.save(f"{code}.png")
+
+
+    # Insert the image file into the third column
+    sheet.add_image(openpyxl.drawing.image.Image(f"{code}.png"), anchor=f"C{next_row}")
+
+    # Increment the row counter
+    next_row += 1
+
+# Save the workbook
+workbook.save("codes.xlsx")

@@ -1,0 +1,16 @@
+import pandas as pd
+
+# Read the Excel files
+df1 = pd.read_excel(r'C:\Users\vajma\Desktop\Matko diplomski\man.xlsx', nrows=76, header=None)
+df2 = pd.read_excel(r'C:\Users\vajma\Desktop\Matko diplomski\tec.xlsx', nrows=75, header=None)
+
+# Select the columns and rows of interest
+df1_selected = df1.iloc[:, 2:]  # Select columns from the third column onwards
+df2_selected = df2.iloc[:, 2:]  # Select columns from the third column onwards
+
+correlation_df1 = df1_selected.corr()
+correlation_df2 = df2_selected.corr()
+
+# Save correlation coefficients to text files
+correlation_df1.to_csv(r'C:\Users\vajma\Desktop\Matko diplomski\man_correlation.txt', sep='\t')
+correlation_df2.to_csv(r'C:\Users\vajma\Desktop\Matko diplomski\tec_correlation.txt', sep='\t')
