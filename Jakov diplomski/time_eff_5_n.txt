@@ -1,0 +1,6 @@
+G0 total line formula: y = 0.000051 * x + 0.103193
+G1 total line formula: y = 0.000008 * x + 0.867004
+G2 total line formula: y = -0.000050 * x + 1.881824
+S total line formula: y = -0.000073 * x + 2.277605
+B total line formula: y = 0.000009 * x + 0.835279
+F total line formula: y = 0.000007 * x + 0.870229

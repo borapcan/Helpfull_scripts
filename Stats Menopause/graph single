@@ -1,0 +1,137 @@
+import pandas as pd
+import matplotlib.pyplot as plt
+import seaborn as sns
+import numpy as np
+
+# Assuming that the Excel file is in the same folder as this script
+file_name = "Menstrual cycle RA.xlsx"
+
+# Read the Excel file and extract the required columns ('Name', 'S', 'B', 'F', 'G2', 'G1', 'G0')
+df = pd.read_excel(file_name, usecols=['Name','S', 'B', 'F', 'G2', 'G1', 'G0'])
+
+# Create a function to extract the timepoint from the 'Name' column
+def extract_timepoint(name):
+    timepoint_str = name[2:4]
+    try:
+        return int(timepoint_str)
+    except ValueError:
+        return -1
+
+# Extract timepoint and person number from the 'Name' column
+df['Timepoint'] = df['Name'].apply(extract_timepoint)
+df['Person'] = df['Name'].str.extract(r'GM\d{2}(\d{2})_', expand=False).fillna(-1).astype(int)
+
+# Filter out rows where the 'Name' column starts with 'stand' and '_S'
+df = df[~df['Name'].str.startswith('stand')]
+df = df[~df['Name'].str.contains('_S')]
+
+# Format the 'Person' and 'Timepoint' columns with leading zeros
+df['Person'] = df['Person'].apply(lambda x: f"{x:02d}")
+df['Timepoint'] = df['Timepoint'].apply(lambda x: f"{x:02d}")
+
+# Create a new DataFrame with 'GM Code', 'Person Code', 'Timepoint Code', 'S', 'B', 'F', 'G2', 'G1', and 'G0'
+output_df = df[['Name', 'Person', 'Timepoint', 'S', 'B', 'F', 'G2', 'G1', 'G0']].copy()
+output_df.columns = ['GM Code', 'Person Code', 'Timepoint Code', 'S', 'B', 'F', 'G2', 'G1', 'G0']
+
+# Sort the table first by person and then by timepoint
+output_df.sort_values(by=['Person Code', 'Timepoint Code'], inplace=True)
+
+# Calculate normalized values for all traits by the first timepoint ('01')
+for trait in ['S', 'B', 'F', 'G2', 'G1', 'G0']:
+    trait_column_name = f'{trait}_Normalized'
+    normalized_values_df = pd.DataFrame(columns=['Person Code', 'Timepoint Code', trait_column_name])
+    
+    for person in output_df['Person Code'].unique():
+        person_df = output_df[output_df['Person Code'] == person]
+        person_01_trait_df = person_df[person_df['Timepoint Code'] == '01'][trait]
+        
+        # Check if the person_df contains data for the '01' timepoint and trait before proceeding
+        if not person_01_trait_df.empty:
+            person_01_trait = person_01_trait_df.values[0]
+
+            for timepoint in person_df['Timepoint Code']:
+                trait_value = person_df[person_df['Timepoint Code'] == timepoint][trait].values[0]
+                normalized_trait = trait_value / person_01_trait
+                normalized_values_df = pd.concat([normalized_values_df, pd.DataFrame({'Person Code': [person], 'Timepoint Code': [timepoint], trait_column_name: [normalized_trait]})])
+    
+    # Merge normalized values back to the original output_df for the current trait
+    output_df = pd.merge(output_df, normalized_values_df, on=['Person Code', 'Timepoint Code'])
+
+import pandas as pd
+import matplotlib.pyplot as plt
+
+# Assuming that the Excel file is in the same folder as this script
+file_name = "Menstrual cycle RA.xlsx"
+
+# Read the Excel file and extract the required columns ('Name', 'S', 'B', 'F', 'G2', 'G1', 'G0')
+df = pd.read_excel(file_name, usecols=['Name','S', 'B', 'F', 'G2', 'G1', 'G0'])
+
+# Create a function to extract the timepoint from the 'Name' column
+def extract_timepoint(name):
+    timepoint_str = name[2:4]
+    try:
+        return int(timepoint_str)
+    except ValueError:
+        return -1
+
+# Extract timepoint and person number from the 'Name' column
+df['Timepoint'] = df['Name'].apply(extract_timepoint)
+df['Person'] = df['Name'].str.extract(r'GM\d{2}(\d{2})_', expand=False).fillna(-1).astype(int)
+
+# Filter out rows where the 'Name' column starts with 'stand' and '_S'
+df = df[~df['Name'].str.startswith('stand')]
+df = df[~df['Name'].str.contains('_S')]
+
+# Format the 'Person' and 'Timepoint' columns with leading zeros
+df['Person'] = df['Person'].apply(lambda x: f"{x:02d}")
+df['Timepoint'] = df['Timepoint'].apply(lambda x: f"{x:02d}")
+
+# Create a new DataFrame with 'GM Code', 'Person Code', 'Timepoint Code', 'S', 'B', 'F', 'G2', 'G1', and 'G0'
+output_df = df[['Name', 'Person', 'Timepoint', 'S', 'B', 'F', 'G2', 'G1', 'G0']].copy()
+output_df.columns = ['GM Code', 'Person Code', 'Timepoint Code', 'S', 'B', 'F', 'G2', 'G1', 'G0']
+
+# Sort the table first by person and then by timepoint
+output_df.sort_values(by=['Person Code', 'Timepoint Code'], inplace=True)
+
+# Calculate normalized values for all traits by the first timepoint ('01')
+for trait in ['S', 'B', 'F', 'G2', 'G1', 'G0']:
+    trait_column_name = f'{trait}_Normalized'
+    normalized_values_df = pd.DataFrame(columns=['Person Code', 'Timepoint Code', trait_column_name])
+    
+    for person in output_df['Person Code'].unique():
+        person_df = output_df[output_df['Person Code'] == person]
+        person_01_trait_df = person_df[person_df['Timepoint Code'] == '01'][trait]
+        
+        # Check if the person_df contains data for the '01' timepoint and trait before proceeding
+        if not person_01_trait_df.empty:
+            person_01_trait = person_01_trait_df.values[0]
+
+            for timepoint in person_df['Timepoint Code']:
+                trait_value = person_df[person_df['Timepoint Code'] == timepoint][trait].values[0]
+                normalized_trait = trait_value / person_01_trait
+                normalized_values_df = pd.concat([normalized_values_df, pd.DataFrame({'Person Code': [person], 'Timepoint Code': [timepoint], trait_column_name: [normalized_trait]})])
+    
+    # Merge normalized values back to the original output_df for the current trait
+    output_df = pd.merge(output_df, normalized_values_df, on=['Person Code', 'Timepoint Code'])
+
+
+# Convert the 'Timepoint Code' column to numeric
+output_df['Timepoint Code'] = pd.to_numeric(output_df['Timepoint Code'])
+
+# Create a separate plot for each person
+for person in output_df['Person Code'].unique():
+    person_df = output_df[output_df['Person Code'] == person]
+    plt.plot(person_df['Timepoint Code'], person_df['S_Normalized'], marker='s', color='gray')
+
+plt.xlabel('Week')
+plt.ylabel('Normalized S')
+plt.title('Normalized S values for each person over time')
+
+# Apply Seaborn styling
+sns.set_style('whitegrid')
+sns.set_palette('gray')
+
+# Calculate and plot the trendline for all people
+sns.regplot(x='Timepoint Code', y='S_Normalized', data=output_df, ci=None, scatter=False, color='black')
+
+plt.show()
